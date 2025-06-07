@@ -5,38 +5,33 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\Role; // Para asignar el rol
+use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Auth; // Para validar los datos
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Password;
 
 class AuthController extends Controller
 {
-    /**
-     * Registra un nuevo usuario.
-     */
     public function register(Request $request)
     {
-        // 1. Validar los datos que envía la app móvil
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed', // 'confirmed' buscará un campo 'password_confirmation'
-            'role_name' => 'required|string|exists:roles,nombre_rol', // Asumimos que la app envía el nombre del rol
+            'password' => 'required|string|min:8|confirmed',
+            'role_name' => 'required|string|exists:roles,nombre_rol',
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422); // 422 es error de validación
+            return response()->json($validator->errors(), 422);
         }
 
-        // 2. Buscar el ID del rol
         $role = Role::where('nombre_rol', $request->role_name)->first();
+        
         if (!$role) {
-            // Esto no debería pasar si 'exists:roles,nombre_rol' funciona bien, pero es una doble verificación
             return response()->json(['message' => 'Rol no válido'], 400);
         }
 
-        // 3. Crear el usuario
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -44,22 +39,16 @@ class AuthController extends Controller
             'role_id' => $role->id,
         ]);
 
-        // 4. Crear un token para el nuevo usuario (para que inicie sesión automáticamente)
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        // 5. Devolver la respuesta
         return response()->json([
             'message' => 'Usuario registrado exitosamente',
             'access_token' => $token,
             'token_type' => 'Bearer',
             'user' => $user
-        ], 201); // 201 significa "Creado"
+        ], 201);
     }
 
-
-    /**
-     * Inicia sesión para un usuario existente.
-     */
     public function login(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -78,7 +67,6 @@ class AuthController extends Controller
         }
 
         $user = User::where('email', $request->email)->firstOrFail();
-
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -88,7 +76,8 @@ class AuthController extends Controller
             'user' => $user
         ]);
     }
-//cierra la sesion de un usuario existente
+
+    //cierra la sesion de un usuario existente
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
@@ -97,7 +86,8 @@ class AuthController extends Controller
             'message' => 'Sesión cerrada exitosamente'
         ]);
     }
-//metodo para la recuperacion de la contraseña
+
+    //metodo para la recuperacion de la contraseña
     public function forgotPassword(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -105,16 +95,49 @@ class AuthController extends Controller
         ]);
 
         if ($validator->fails()) {
-
             return response()->json($validator->errors(), 422);
         }
 
+        $status = Password::sendResetLink($request->only('email'));
 
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json(['message' => $status]);
+        }
 
-        return response()->json([
-            'message' => 'Si tu correo electrónico está en nuestros registros, recibirás un enlace para restablecer tu contraseña en breve.'
+        return response()->json(['message' => $status], 400); 
+    }
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'token' => 'required|string',
+            'email' => 'required|string|email|exists:users,email',
+            'password' => 'required|string|min:8|confirmed',
         ]);
-    }      
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
+        }
+
+        $status = Password::reset(
+            $request->only('email', 'password', 'password_confirmation', 'token'),
+            function ($user, $password) {
+                $user->forceFill([
+                    'password' => Hash::make($password)
+                ])->save();
+
+            }
+        );
+
+        if ($status === Password::PASSWORD_RESET) {
+            return response()->json(['message' => __($status)]);
+        }
+
+        return response()->json(['message' => __($status)], 400);
+    }
 
 }
+
+
+
+
 

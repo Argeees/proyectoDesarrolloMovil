@@ -7,12 +7,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use App\Models\UserProfile; 
+use Illuminate\Support\Facades\Storage; 
 
 class UserProfileController extends Controller
 {
     public function show(Request $request)
     {
+
         $user = Auth::user();
 
         if (!$user) {
@@ -20,12 +21,12 @@ class UserProfileController extends Controller
         }
 
         $profileData = null;
-        if ($user->userProfile) { // Accede a la relación userProfile directamente
+        if ($user->userProfile) {
             $profileData = [
                 'nombre_completo' => $user->userProfile->nombre_completo,
                 'telefono' => $user->userProfile->telefono,
                 'direccion' => $user->userProfile->direccion,
-                'foto_url' => $user->userProfile->foto_url,
+                'foto_url' => $user->userProfile->foto_url ? Storage::disk('public')->url($user->userProfile->foto_url) : null,
             ];
         }
 
@@ -33,7 +34,7 @@ class UserProfileController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'role' => $user->role ? $user->role->nombre_rol : null, // Accede a la relación role
+            'role' => $user->role ? $user->role->nombre_rol : null,
             'profile' => $profileData,
             'email_verified_at' => $user->email_verified_at,
             'created_at' => $user->created_at,
@@ -43,6 +44,7 @@ class UserProfileController extends Controller
 
     public function update(Request $request)
     {
+
         $user = Auth::user();
 
         if (!$user) {
@@ -62,20 +64,23 @@ class UserProfileController extends Controller
             'nombre_completo' => 'sometimes|required|string|max:255',
             'telefono' => 'nullable|string|max:255',
             'direccion' => 'nullable|string|max:255',
-            'foto_url' => 'nullable|string|max:255',
+            'photo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048', // Campo para el archivo de foto
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
+        $userDataToUpdate = [];
         if ($request->has('name')) {
-            $user->name = $request->name;
+            $userDataToUpdate['name'] = $request->name;
         }
         if ($request->has('email')) {
-            $user->email = $request->email;
+            $userDataToUpdate['email'] = $request->email;
         }
-        $user->save();
+        if (count($userDataToUpdate) > 0) {
+            $user->update($userDataToUpdate);
+        }
 
         $profileDataToUpdate = [];
         if ($request->has('nombre_completo')) {
@@ -87,29 +92,36 @@ class UserProfileController extends Controller
         if ($request->has('direccion')) {
             $profileDataToUpdate['direccion'] = $request->direccion;
         }
-        if ($request->has('foto_url')) {
-            $profileDataToUpdate['foto_url'] = $request->foto_url;
+
+        $userProfile = $user->userProfile()->firstOrNew(['user_id' => $user->id]);
+
+        if ($request->hasFile('photo')) {
+            if ($userProfile->foto_url) {
+                Storage::disk('public')->delete($userProfile->foto_url);
+            }
+            $path = $request->file('photo')->store('profile-photos', 'public');
+            $profileDataToUpdate['foto_url'] = $path;
         }
 
-        if (count($profileDataToUpdate) > 0) {
-            $user->userProfile()->updateOrCreate(
-                ['user_id' => $user->id],
-                $profileDataToUpdate
-            );
-        }
+        // Asignar los datos y guardar el perfil
         
-        // Para devolver la respuesta, volvemos a construirla como en show()
-        $updatedProfileData = null;
-        if ($user->userProfile()->exists()) { // Verificamos si el perfil existe después de updateOrCreate
-            $reloadedUserProfile = $user->userProfile()->first(); // Recargamos el perfil
-             $updatedProfileData = [
-                'nombre_completo' => $reloadedUserProfile->nombre_completo,
-                'telefono' => $reloadedUserProfile->telefono,
-                'direccion' => $reloadedUserProfile->direccion,
-                'foto_url' => $reloadedUserProfile->foto_url,
+        $userProfile->user_id = $user->id; 
+        foreach($profileDataToUpdate as $key => $value){
+            $userProfile->{$key} = $value;
+        }
+        $userProfile->save();
+
+        $user->refresh()->load('userProfile', 'role');
+
+        $reloadedProfileData = null;
+        if ($user->userProfile) {
+             $reloadedProfileData = [
+                'nombre_completo' => $user->userProfile->nombre_completo,
+                'telefono' => $user->userProfile->telefono,
+                'direccion' => $user->userProfile->direccion,
+                'foto_url' => $user->userProfile->foto_url ? Storage::disk('public')->url($user->userProfile->foto_url) : null,
             ];
         }
-
 
         return response()->json([
             'message' => 'Perfil actualizado exitosamente',
@@ -118,7 +130,7 @@ class UserProfileController extends Controller
                 'name' => $user->name,
                 'email' => $user->email,
                 'role' => $user->role ? $user->role->nombre_rol : null,
-                'profile' => $updatedProfileData,
+                'profile' => $reloadedProfileData,
             ]
         ]);
     }

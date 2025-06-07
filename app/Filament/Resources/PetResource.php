@@ -37,7 +37,7 @@ class PetResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('raza')
                     ->maxLength(255),
-                Forms\Components\DatePicker::make('fecha_nacimiento'),
+                Forms\Components\DateTimePicker::make('fecha_nacimiento'),
                 Forms\Components\TextInput::make('foto_url')
                     ->maxLength(255),
             ]);

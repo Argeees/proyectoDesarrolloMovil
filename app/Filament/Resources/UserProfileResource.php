@@ -41,11 +41,15 @@ class UserProfileResource extends Resource
                     ->maxLength(255),
                 Forms\Components\TextInput::make('direccion')
                     ->maxLength(255),
+                    //para la subida de la foto del perfil
                 Forms\Components\FileUpload::make('foto_url')
-                    ->label("Foto de perfil")
-                    ->image()
-                    ->nullable()
-                    ,
+                    ->label('foto del perfil')
+                    ->disk('public') 
+                    ->directory('profile-photos') 
+                    ->image() 
+                    ->rules([ 'image', 'mimes:jpg,jpeg,png', 'max:2048']) 
+                    ->downloadable()
+                    ->openable(),
             ]);
     }
 
@@ -65,8 +69,9 @@ class UserProfileResource extends Resource
                 Tables\Columns\TextColumn::make('direccion')
                     ->searchable(),
                 Tables\Columns\ImageColumn::make('foto_url')
-                    ->label("Foto de perfil")
-                    ,
+                    ->label("foto")
+                    ->disk('public'),
+                    
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -77,7 +82,7 @@ class UserProfileResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -92,7 +97,7 @@ class UserProfileResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            
         ];
     }
 
