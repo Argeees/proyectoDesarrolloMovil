@@ -7,7 +7,7 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
-proyecto elaborado por ages martinez chavez exp.315460 
+proyecto elaborado por arges martinez chavez exp.315460 
 para la materi ade desarrollo web con el maestro Beto Naranjo 
 
 se desarrollo con laravel,composer,fialment,etc
