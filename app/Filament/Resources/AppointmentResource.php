@@ -12,37 +12,56 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+//resource para las citas, pa ver crear y editar citas en el panel
 class AppointmentResource extends Resource
 {
     protected static ?string $model = Appointment::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';//icono
+    public static function getEloquentQuery(): Builder//se ejecuta antes de que la tabla muestre y nos permite modificar la consulta
+{
+    $query = parent::getEloquentQuery();
+    $user = auth()->user();//obtengo el usuario autenticado
 
+    if ($user->role->nombre_rol === 'Veterinario') {
+        return $query->where('vet_id', $user->id);//si el rol es vet ,solo se traen las citas de ese veterinario
+    }
+    // si el rol es dueno de mascota , se usa whereHas pa filtrar las citas que pertenecem auna mascota cuyo dueño seal el actual
+    if ($user->role->nombre_rol === 'Dueño de Mascota') {
+
+        return $query->whereHas('pet', fn ($q) => $q->where('owner_id', $user->id));
+    }
+
+    // admin ve todo
+    return $query;
+}
+    //define el formulario para crear y editar citas
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
+                //seleccion de mascota
                 Forms\Components\Select::make('pet_id')
                     ->relationship('pet', 'nombre_mascota')
                     ->label('Mascota')
                     ->preload()
                     ->searchable()
                     ->required(),
-                    
+                //seleccion de veterinario
                 Forms\Components\Select::make('vet_id')
                     ->relationship('veterinarian', 'name')
                     ->label('Veterinario')
                     ->preload()
                     ->searchable()
                     ->required(),
-                    
+                //fecha y hora
                 Forms\Components\DateTimePicker::make('appointment_datetime')
                     ->label('Fecha y hora de la cita')
                     ->required(),
                 Forms\Components\Textarea::make('motivo_consulta')
                     ->required()
                     ->columnSpanFull(),
+                //selector con opciones
                 Forms\Components\Select::make('estado')
                     ->options([
                         'Programada' => 'Programada',
@@ -54,7 +73,7 @@ class AppointmentResource extends Resource
                     
             ]);
     }
-
+    //define la tabla que lista las citas
     public static function table(Table $table): Table
     {
         return $table
@@ -111,7 +130,7 @@ class AppointmentResource extends Resource
     }
 
     public static function getPages(): array
-    {
+    {//rutas prar este resource
         return [
             'index' => Pages\ListAppointments::route('/'),
             'create' => Pages\CreateAppointment::route('/create'),

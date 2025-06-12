@@ -19,6 +19,15 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+public static function canViewAny(): bool
+{
+    // Obtiene el rol del usuario autenticado
+    $userRole = auth()->user()->role->nombre_rol;
+
+    // Permite ver si el rol es 'Administrador' O 'Veterinario'
+    return in_array($userRole, ['Admin', 'Veterinario']);
+}
+
     public static function form(Form $form): Form
     {
         return $form

@@ -19,6 +19,12 @@ class ProductResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function canViewAny(): bool
+{
+    // Solo permite ver esta sección si el rol NO es 'Dueño de Mascota'.
+    return auth()->user()->role->nombre_rol !== 'Dueño de Mascota';
+}
+
     public static function form(Form $form): Form
     {
         //forma del producto , con prefijo de $

@@ -7,18 +7,15 @@ use App\Models\Pet;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
-// Si vas a usar PetResource más adelante, descomenta la siguiente línea:
-// use App\Http\Resources\PetResource; 
-// Y también: use Illuminate\Support\Facades\Log; // Si usas la línea de Log
+
 
 class PetController extends Controller
 {
-    /**
-     * Muestra una lista de las mascotas del usuario autenticado.
-     */
+    //muestra una lista de mascotas del usuario autenticado
     public function index()
-    {
-        /** @var \App\Models\User|null $user */ // <--- AÑADE ESTA LÍNEA
+    {//anotacion phpdoc para que la IDE entienda que la variable $user es de tipo User
+        /** @var \App\Models\User|null $user */ 
+        //obtengo el usuario autenticado
         $user = Auth::user();
 
         if (!$user) {
@@ -26,20 +23,17 @@ class PetController extends Controller
         }
 
         if (!method_exists($user, 'petsOwned')) {
-            // Si quieres más detalles en tu log para depurar (opcional):
-            // Log::error('El método petsOwned no existe en User.', ['user_class' => get_class($user)]);
+
             return response()->json(['message' => 'Error: La relación de mascotas no está configurada correctamente en el modelo User.'], 500);
         }
 
         $pets = $user->petsOwned()->get();
 
         return response()->json($pets);
-        // return PetResource::collection($pets); // Para usar con API Resources
+  
     }
 
-    /**
-     * Almacena una nueva mascota para el usuario autenticado.
-     */
+    //almacena una nueva mascota para el usuario autenticado
     public function store(Request $request)
     {
         $user = Auth::user();
@@ -55,7 +49,7 @@ class PetController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-
+        //creo unja nueva instancia del modelo pet
         $pet = new Pet();
         $pet->owner_id = $user->id;
         $pet->nombre_mascota = $request->nombre_mascota;
@@ -69,24 +63,20 @@ class PetController extends Controller
             'message' => 'Mascota registrada exitosamente',
             'pet' => $pet
         ], 201);
-        // return new PetResource($pet); // Para usar con API Resources
+        
     }
 
-    /**
-     * Muestra la mascota especificada (que pertenezca al usuario autenticado).
-     */
+    //muestra una mascota especificada
     public function show(Pet $pet)
     {
         if (Auth::id() !== $pet->owner_id) {
             return response()->json(['message' => 'No autorizado'], 403);
         }
         return response()->json($pet);
-        // return new PetResource($pet); // Para usar con API Resources
+        
     }
 
-    /**
-     * Actualiza la mascota especificada en la base de datos (que pertenezca al usuario autenticado).
-     */
+    //actualiza una mascota especificada
     public function update(Request $request, Pet $pet)
     {
         if (Auth::id() !== $pet->owner_id) {
@@ -111,12 +101,10 @@ class PetController extends Controller
             'message' => 'Mascota actualizada exitosamente',
             'pet' => $pet
         ]);
-        // return new PetResource($pet); // Para usar con API Resources
+        
     }
 
-    /**
-     * Elimina la mascota especificada de la base de datos (que pertenezca al usuario autenticado).
-     */
+    //elimina una mascota especificada de un user
     public function destroy(Pet $pet)
     {
         if (Auth::id() !== $pet->owner_id) {
@@ -124,7 +112,7 @@ class PetController extends Controller
         }
 
         $pet->delete();
-
+        //devolvemois un mensaje de exito
         return response()->json(['message' => 'Mascota eliminada exitosamente']);
     }
 }

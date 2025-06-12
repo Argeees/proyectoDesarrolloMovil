@@ -18,16 +18,17 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
+//definimos y configuramos el panel de admin que despues le puse panelUAQ
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
         return $panel
             ->default()
-            ->id('admin')
-            ->path('admin')
+            ->id('panelUAQ')
+            ->path('panelUAQ')
             ->login()
-            ->colors([
+            ->colors([//cambie el color naranja al morado paraseguir la paleta de colores
                 'primary' => Color::Violet,
                 
             ])
@@ -40,7 +41,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 Widgets\AccountWidget::class,
                 Widgets\FilamentInfoWidget::class,
-            ])
+            ])//filtros de seguridad y de sesion por los que pasa cada peticion antes de llegar al panel
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -51,7 +52,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-            ])
+            ])//solo los users autenticados pueden ver el panel
             ->authMiddleware([
                 Authenticate::class,
             ]);

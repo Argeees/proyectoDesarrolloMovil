@@ -5,16 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-
+//modelo para los productos
 class Product extends Model
 {
     use HasFactory;
 
-    /**
-     * Los atributos que se pueden asignar masivamente.
-     *
-     * @var array<int, string>
-     */
+    //los campos que se pueden llenar
     protected $fillable = [
         'nombre_producto',
         'descripcion',
@@ -22,24 +18,17 @@ class Product extends Model
         'stock',
     ];
 
-    /**
-     * Los atributos que deben ser convertidos a tipos nativos.
-     *
-     * @var array
-     */
+    //para que se trate de manera especial precio
     protected $casts = [
         'precio_unitario' => 'decimal:2',
     ];
 
-    /**
-     * Define la relación "muchos a muchos" con el modelo Appointment.
-     * Un producto puede estar en muchas citas (ventas).
-     */
+    //un producto tiene muchas citas (calse pivote) para la relacion de muchos a muchos 
     public function appointments(): BelongsToMany
     {
         return $this->belongsToMany(Appointment::class, 'appointment_product') // Nombre de la tabla pivote
-                    //->using(AppointmentProduct::class) // Opcional: si quieres usar tu modelo pivote personalizado
-                    ->withPivot('cantidad_vendida', 'precio_al_momento_venta') // Columnas extra
-                    ->withTimestamps(); // Si tu tabla pivote tiene timestamps
+                   
+                    ->withPivot('cantidad_vendida', 'precio_al_momento_venta') 
+                    ->withTimestamps(); // Se le dice a laravel que la tabla de pivote tenga las columnas created_at y updated_at
     }
 }

@@ -11,7 +11,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\UserProfileController;
 
 // Rutas públicas para autenticación
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
 Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.reset'); // <-- MOVIDA AQUÍ, FUERA DEL GRUPO PROTEGIDO
@@ -24,6 +24,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
 
     Route::apiResource('pets', PetController::class);
+
+    
+    // ruta  para obtener solo las citas programadas 
+    Route::get('/appointments/scheduled', [AppointmentController::class, 'getScheduled']);
+    
+    
+    
     Route::apiResource('appointments', AppointmentController::class);
 
     // Rutas para Notas Médicas
@@ -43,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //ruta para obtener la lista de veterinarios
     Route::get('/veterinarians', [App\Http\Controllers\Api\UserController::class, 'getVeterinarians']);
+
 });
    
 

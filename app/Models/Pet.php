@@ -6,18 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-
+//modelo para las mascotas
 class Pet extends Model
 {
     use HasFactory;
 
-    /**
-     * Los atributos que se pueden asignar masivamente.
-     *
-     * @var array<int, string>
-     */
+    //los atributos que se pueden asignar en masa
     protected $fillable = [
-        'owner_id',
+        'owner_id',//la llave foranea que dice quien es el duenio
         'nombre_mascota',
         'especie',
         'raza',
@@ -25,27 +21,18 @@ class Pet extends Model
         'foto_url',
     ];
 
-    /**
-     * Los atributos que deben ser convertidos a tipos nativos.
-     *
-     * @var array
-     */
+    //los atributos que deben ser convertidos en fechas
     protected $casts = [
         'fecha_nacimiento' => 'date',
     ];
 
-    /**
-     * Define la relación "pertenece a" con el modelo User (el dueño).
-     */
+    //una mascota pertenece a un duenio
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_id');
     }
 
-    /**
-     * Define la relación "uno a muchos" con el modelo Appointment.
-     * Una mascota puede tener muchas citas.
-     */
+    //una misma mascota puede tener muchas citas
     public function appointments(): HasMany
     {
         return $this->hasMany(Appointment::class);

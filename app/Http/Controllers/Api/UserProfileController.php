@@ -8,18 +8,18 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Storage; 
-
+//este control maneja la logica para el perfil del usuario a traves de la api
 class UserProfileController extends Controller
-{
+{//muestra el perfil del usuario
     public function show(Request $request)
     {
-
+        //si no hay un usuario autenticado, se devuelve un error
         $user = Auth::user();
 
         if (!$user) {
             return response()->json(['message' => 'Usuario no autenticado.'], 401);
         }
-
+        //preparo los datos del perfil adicional o info adicional
         $profileData = null;
         if ($user->userProfile) {
             $profileData = [
@@ -29,7 +29,7 @@ class UserProfileController extends Controller
                 'foto_url' => $user->userProfile->foto_url ? Storage::disk('public')->url($user->userProfile->foto_url) : null,
             ];
         }
-
+        //se convinan los datos del usuario y el perfil
         return response()->json([
             'id' => $user->id,
             'name' => $user->name,
@@ -41,16 +41,16 @@ class UserProfileController extends Controller
             'updated_at' => $user->updated_at,
         ]);
     }
-
+    //actualiza los datos del perfil
     public function update(Request $request)
     {
-
+        //obtener el usuario autenticado
         $user = Auth::user();
 
         if (!$user) {
             return response()->json(['message' => 'Usuario no autenticado.'], 401);
         }
-
+        //validamos los datos que llegan
         $validator = Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'email' => [
@@ -70,7 +70,7 @@ class UserProfileController extends Controller
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
-
+        //actualizamos los datos de la tabla user, si es que vienen
         $userDataToUpdate = [];
         if ($request->has('name')) {
             $userDataToUpdate['name'] = $request->name;
@@ -92,7 +92,7 @@ class UserProfileController extends Controller
         if ($request->has('direccion')) {
             $profileDataToUpdate['direccion'] = $request->direccion;
         }
-
+        //busca unbo perfil si lo encuentra lo carga de lo contrario cr3ea una nueva instancia en memioria
         $userProfile = $user->userProfile()->firstOrNew(['user_id' => $user->id]);
 
         if ($request->hasFile('photo')) {

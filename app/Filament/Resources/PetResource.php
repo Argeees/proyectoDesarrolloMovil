@@ -12,13 +12,25 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-
+//crea el crud para mascota
 class PetResource extends Resource
 {
     protected static ?string $model = Pet::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    //se ejecuta antes de que la tabla se muestre , permite filtrar que registros se ven dependiendo del rol
+    public static function getEloquentQuery(): Builder
+{
+    $query = parent::getEloquentQuery();
+    $user = auth()->user();//obtengo el usuario autenticado
 
+    if ($user->role->nombre_rol === 'Dueño de Mascota') {
+        return $query->where('owner_id', $user->id);
+    }
+
+    return $query;
+}
+    //form para crear y editar
     public static function form(Form $form): Form
     {
         return $form
@@ -91,7 +103,7 @@ class PetResource extends Resource
             //
         ];
     }
-
+    //paginas y rutas para este resource
     public static function getPages(): array
     {
         return [

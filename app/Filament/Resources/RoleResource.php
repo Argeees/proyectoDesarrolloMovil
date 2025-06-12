@@ -18,6 +18,11 @@ class RoleResource extends Resource
     protected static ?string $model = Role::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    
+public static function canViewAny(): bool
+{
+    return auth()->user()->role->nombre_rol === 'Admin';
+}
 
     public static function form(Form $form): Form
     {

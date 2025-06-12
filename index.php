@@ -1,3 +1,4 @@
+//pagina default de laragon
 <?php
     if (! empty($_GET['q'])) {
         $query = htmlspecialchars($_GET['q'], ENT_QUOTES, 'UTF-8');

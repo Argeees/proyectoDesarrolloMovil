@@ -15,12 +15,8 @@ use Filament\Panel;
 class User extends Authenticatable implements FilamentUser
 {
     use HasApiTokens, HasFactory, Notifiable;
-
-    /**
-     * Atributos asignables masivamente.
-     *
-     * @var array<int, string>
-     */
+    protected $with = ['role'];
+    //lista blanca de atributos que se pueden asignar masivamente
     protected $fillable = [
         'name',
         'email',
@@ -28,65 +24,48 @@ class User extends Authenticatable implements FilamentUser
         'role_id',
     ];
 
-    /**
-     * Atributos que deben ocultarse durante la serialización.
-     *
-     * @var array<int, string>
-     */
+    //estos nunca se muestran , ya que son datos sensibles
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * Atributos que deben ser convertidos a tipos nativos.
-     *
-     * @var array<string, string>
-     */
+
+    // se le pide a laravel que trate esto atributos de manera especial , como hashear la password
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
 
-    /**
-     * Obtiene el rol del usuario.
-     */
+    //un user pertenece a un rol
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class);
     }
 
-    /**
-     * Obtiene el perfil del usuario.
-     */
+    //un user tiene un solo perfil de usuario
     public function userProfile(): HasOne
     {
         return $this->hasOne(UserProfile::class, 'user_id');
     }
 
-    /**
-     * Obtiene las mascotas que le pertenecen al usuario.
-     */
+    // el user como dueño puede tener muchas mascotas
     public function petsOwned(): HasMany
     {
         return $this->hasMany(Pet::class, 'owner_id');
     }
 
-    /**
-     * Obtiene las citas del usuario (si es veterinario).
-     */
+    //relacion de que el veterinario tenga varias citas 
     public function appointmentsAsVet(): HasMany
     {
         return $this->hasMany(Appointment::class, 'vet_id');
     }
 
-    /**
-     * Determina si el usuario puede acceder al panel de Filament.
-     */
+
     public function canAccessPanel(Panel $panel): bool
     {
-        // TODO: Implementar la lógica de acceso real basada en el rol del usuario.
-        // Por ejemplo: if ($this->role) { return in_array($this->role->nombre_rol, ['Administrador', 'Veterinario']); } return false;
-        return true; // Temporal: permite el acceso a todos los usuarios autenticados.
+    //permitimos que los 3 roles puedan acceder
+    return $this->role && in_array($this->role->nombre_rol, ['Admin', 'Veterinario', 'Dueño de Mascota']);
+
     }
 }

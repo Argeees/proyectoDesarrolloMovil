@@ -18,6 +18,12 @@ class MedicalNoteResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
 
+    public static function canViewAny(): bool
+{
+    // Solo permite ver esta sección si el rol NO es 'Dueño de Mascota'.
+    return auth()->user()->role->nombre_rol !== 'Dueño de Mascota';
+}
+
     public static function form(Form $form): Form
     {
         return $form
@@ -98,7 +104,7 @@ class MedicalNoteResource extends Resource
             //
         ];
     }
-
+    //rutas prar este resource
     public static function getPages(): array
     {
         return [
