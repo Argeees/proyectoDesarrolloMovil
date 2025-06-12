@@ -8,6 +8,6 @@
 </p>
 
 proyecto elaborado por arges martinez chavez exp.315460 
-para la materi ade desarrollo web con el maestro Beto Naranjo 
+para la materi ade desarrollo movil con el maestro Beto Naranjo 
 
 se desarrollo con laravel,composer,fialment,etc
